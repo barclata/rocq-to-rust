@@ -1,0 +1,33 @@
+# This file was generated from `meta.yml`, please do not edit manually.
+# Follow the instructions on https://github.com/coq-community/templates to regenerate.
+
+opam-version: "2.0"
+maintainer: "barclata@gmail.com"
+version: "dev"
+
+homepage: "https://github.com/Durbatuluk1701/EasyBakeRust"
+dev-repo: "git+https://github.com/Durbatuluk1701/EasyBakeRust.git"
+bug-reports: "https://github.com/Durbatuluk1701/EasyBakeRust/issues"
+license: "CC-BY-SA-4.0"
+
+synopsis: "An extraction plugin for Rust"
+description: """
+An extraction plugin for Rust that does not require any semantic preservation proofs. Derived from EasyBakeCakeML and coq2rust."""
+
+build: ["dune" "build" "-p" name "-j" jobs]
+depends: [
+  "ocaml" { >= "4.13~" }
+  "dune" {>= "3.17"}
+  "coq" 
+]
+
+tags: [
+  "keyword:Rust"
+  "keyword:Extraction"
+  "logpath:EasyBakeRust"
+]
+authors: [
+  "TJ Barclay"
+  "Will Thomas"
+  "Yoichi Hirai <barclata@gmail.com>"
+]

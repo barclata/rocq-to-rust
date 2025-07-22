@@ -1,0 +1,171 @@
+(************************************************************************)
+(*         *   The Coq Proof Assistant / The Coq Development Team       *)
+(*  v      *         Copyright INRIA, CNRS and contributors             *)
+(* <O___,, * (see version control and CREDITS file for authors & dates) *)
+(*   \VV/  **************************************************************)
+(*    //   *    This file is distributed under the terms of the         *)
+(*         *     GNU Lesser General Public License Version 2.1          *)
+(*         *     (see LICENSE file for the text of the license)         *)
+(************************************************************************)
+
+{
+
+open Pcoq.Prim
+
+}
+
+DECLARE PLUGIN "coq-EasyBakeRust.plugin"
+
+{
+
+(* ML names *)
+
+open Stdarg
+open Pp
+open Names
+open Table
+open Extract_env
+
+let pr_cakemlname s = spc () ++ qs s
+
+}
+
+VERNAC ARGUMENT EXTEND cakemlname
+  PRINTED BY { pr_cakemlname }
+| [ preident(id) ] -> { id }
+| [ string(s) ] -> { s }
+END
+
+{
+
+let pr_cakeml_int_or_id = function
+  | ArgInt i -> int i
+  | ArgId id -> Id.print id
+
+}
+
+VERNAC ARGUMENT EXTEND cakeml_int_or_id
+  PRINTED BY { pr_cakeml_int_or_id }
+| [ preident(id) ] -> { ArgId (Id.of_string id) }
+| [ integer(i) ] -> { ArgInt i }
+END
+
+(* Extraction commands *)
+
+VERNAC COMMAND EXTEND CakeML_Extraction CLASSIFIED AS QUERY STATE opaque_access
+(* Extraction in the Coq toplevel *)
+| [ "CakeML_Extraction" global(x) ] -> { simple_cakeml_extraction x }
+| [ "Recursive" "CakeML_Extraction" ne_global_list(l) ] -> { full_cakeml_extraction None l }
+
+(* Monolithic cakeml_extraction to a file *)
+| [ "CakeML_Extraction" string(f) ne_global_list(l) ]
+  -> { full_cakeml_extraction (Some f) l }
+END
+
+VERNAC COMMAND EXTEND SeparateCakeML_Extraction CLASSIFIED AS QUERY STATE opaque_access
+(* Same, with content split in several files *)
+| [ "Separate" "CakeML_Extraction" ne_global_list(l) ]
+  -> { separate_cakeml_extraction l }
+END
+
+(* Modular cakeml_extraction (one Coq library = one ML module) *)
+VERNAC COMMAND EXTEND CakeML_ExtractionLibrary CLASSIFIED AS QUERY STATE opaque_access
+| [ "CakeML_Extraction" "Library" identref(m) ]
+  -> { cakeml_extraction_library false m }
+END
+
+VERNAC COMMAND EXTEND RecursiveCakeML_ExtractionLibrary CLASSIFIED AS QUERY STATE opaque_access
+| [ "Recursive" "CakeML_Extraction" "Library" identref(m) ]
+  -> { cakeml_extraction_library true m }
+END
+
+VERNAC COMMAND EXTEND CakeML_ExtractionInline CLASSIFIED AS SIDEFF
+(* Custom inlining directives *)
+| [ "CakeML_Extraction" "Inline" ne_global_list(l) ]
+  -> { cakeml_extraction_inline true l }
+END
+
+VERNAC COMMAND EXTEND CakeML_ExtractionNoInline CLASSIFIED AS SIDEFF
+| [ "CakeML_Extraction" "NoInline" ne_global_list(l) ]
+  -> { cakeml_extraction_inline false l }
+END
+
+VERNAC COMMAND EXTEND PrintCakeML_ExtractionInline CLASSIFIED AS QUERY
+| [ "Print" "CakeML_Extraction" "Inline" ]
+  -> {Feedback.msg_notice (print_cakeml_extraction_inline ()) }
+END
+
+VERNAC COMMAND EXTEND ResetCakeML_ExtractionInline CLASSIFIED AS SIDEFF
+| [ "Reset" "CakeML_Extraction" "Inline" ]
+  -> { reset_cakeml_extraction_inline () }
+END
+
+VERNAC COMMAND EXTEND CakeML_ExtractionImplicit CLASSIFIED AS SIDEFF
+(* Custom implicit arguments of some csts/inds/constructors *)
+| [ "CakeML_Extraction" "Implicit" global(r) "[" cakeml_int_or_id_list(l) "]" ]
+  -> { cakeml_extraction_implicit r l }
+END
+
+VERNAC COMMAND EXTEND CakeML_ExtractionBlacklist CLASSIFIED AS SIDEFF
+(* Force CakeML_Extraction to not use some filenames *)
+| [ "CakeML_Extraction" "Blacklist" ne_preident_list(l) ]
+  -> { cakeml_extraction_blacklist l }
+END
+
+VERNAC COMMAND EXTEND PrintCakeML_ExtractionBlacklist CLASSIFIED AS QUERY
+| [ "Print" "CakeML_Extraction" "Blacklist" ]
+  -> { Feedback.msg_notice (print_cakeml_extraction_blacklist ()) }
+END
+
+VERNAC COMMAND EXTEND ResetCakeML_ExtractionBlacklist CLASSIFIED AS SIDEFF
+| [ "Reset" "CakeML_Extraction" "Blacklist" ]
+  -> { reset_cakeml_extraction_blacklist () }
+END
+
+(* Commands for setting, printing and resetting callbacks cakeml_extraction. *)
+
+VERNAC COMMAND EXTEND PrintCakeML_ExtractionCallback CLASSIFIED AS QUERY
+| [ "Print" "CakeML_Extraction" "Callback" ]
+  -> {Feedback.msg_notice (print_cakeml_extraction_callback ()) }
+END
+
+VERNAC COMMAND EXTEND ResetCakeML_ExtractionCallback CLASSIFIED AS SIDEFF
+| [ "Reset" "CakeML_Extraction" "Callback" ]
+  -> { reset_cakeml_extraction_callback () }
+END
+
+(* Commands for printing and resetting foreigns cakeml_extraction. *)
+VERNAC COMMAND EXTEND PrintCakeML_ExtractionForeign CLASSIFIED AS QUERY
+| [ "Print" "CakeML_Extraction" "Foreign" ]
+  -> {Feedback.msg_notice (print_cakeml_extraction_foreign ()) }
+END
+
+(*
+VERNAC COMMAND EXTEND ResetCakeML_ExtractionForeign CLASSIFIED AS SIDEFF
+| [ "Reset" "CakeML_Extraction" "Foreign" ]
+  -> { reset_cakeml_extraction_foreign () }
+END
+*)
+
+(* Overriding of a Coq object by an ML one *)
+VERNAC COMMAND EXTEND CakeML_ExtractionConstant CLASSIFIED AS SIDEFF
+| [ "Extract" "Constant" global(x) string_list(idl) "=>" cakemlname(y) ]
+  -> { extract_constant_inline false x idl y }
+END
+
+VERNAC COMMAND EXTEND CakeML_ExtractionInlinedConstant CLASSIFIED AS SIDEFF
+| [ "Extract" "Inlined" "Constant" global(x) "=>" cakemlname(y) ]
+  -> { extract_constant_inline true x [] y }
+END
+
+VERNAC COMMAND EXTEND CakeML_ExtractionInductive CLASSIFIED AS SIDEFF
+| [ "Extract" "Inductive" global(x) "=>"
+    cakemlname(id) "[" cakemlname_list(idl) "]" string_opt(o) ]
+  -> { extract_inductive x id idl o }
+END
+(* Show the cakeml_extraction of the current proof *)
+
+VERNAC COMMAND EXTEND ShowCakeML_Extraction CLASSIFIED AS QUERY STATE proof_query
+| [ "Show" "CakeML_Extraction" ]
+  -> { show_cakeml_extraction }
+END

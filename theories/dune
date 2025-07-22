@@ -1,0 +1,9 @@
+; This file was generated from `meta.yml`, please do not edit manually.
+; Follow the instructions on https://github.com/coq-community/templates to regenerate.
+
+(coq.theory
+ (name EasyBakeRust)
+ (package coq-EasyBakeRust)
+ (plugins coq-EasyBakeRust.plugin)
+ (synopsis "An extraction plugin for Rust")
+ (modules (:standard \ ExtrCakeMLBasic ExtrCakeMLChar ExtrCakeMLNativeString)))

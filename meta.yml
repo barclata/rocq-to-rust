@@ -1,0 +1,79 @@
+---
+# This file is used to configure the project metadata
+fullname: Easy Bake Rust - Rust Extraction Plugin
+# NOTE: The shortname is also the REPOSITORY NAME!!!
+shortname: EasyBakeRust # NOTE: This is the library name that other projects will use to depend on/import from this project
+synopsis: "An extraction plugin for Rust"
+description: "An extraction plugin for Rust that does not require any semantic preservation proofs. Derived from EasyBakeCakeML and coq2rust."
+authors:
+  - name: "TJ Barclay"
+  - name: "Will Thomas"
+  - name: "Yoichi Hirai"
+    email: "barclata@gmail.com"
+opam-file-maintainer: "barclata@gmail.com" # Need a strong default here or we will accidentally email a Coq developer
+
+######################################################
+# NOTE: Optional Extra Info
+######################################################
+# categories:
+#   - name: "<Category>"
+
+# keywords:
+#   - name: "<Keyword1>"
+#   - name: "<Keyword2>"
+keywords:
+  - name: "Rust"
+  - name: "Extraction"
+
+######################################################
+# NOTE: Stuff below this line you should not need to change
+######################################################
+# NOTE: check out https://github.com/coq-community/templates/blob/master/ref.yml for more possible values
+
+branch: main
+organization: Durbatuluk1701
+# opam_name: <opam-name i.e. coq-<project-short-name>> # i.e. coq-Base64
+
+# CI services - we only want GH Actions by default
+# NOTE: You should not need to change these usually!
+travis: false
+action: true
+circleci: false
+nix: false
+ci_test_dependants: false
+ci_extra_dev: false
+ci_cron_schedule: 0 0 * * 0 # Weekly at midnight sunday
+tested_coq_opam_versions:
+  - version: "8.20"
+
+## UNKNOWN: action_appendix:
+
+# Config Options
+sldg_dev_pkgs_needed: true
+community: false # By default projects are not part of coq-community
+coqdoc: false # By default we want coqdoc
+submodule: false # By default we don't want submodules
+dune: true # By default we want dune builds
+ocaml_plugin: true # By default we don't assume plugins to use ocaml code
+ocaml_libraries:
+  - name: "coq-core.vernac"
+  - name: "coq-core.lib"
+  - name: "coq-core.plugins.extraction"
+ocaml_coq_pp_files:
+  - name: "g_extraction"
+
+# date: # by default we arent setting a date
+
+# Extra Metadata
+# doi:
+# chat: # if we ever have a chat room?
+license:
+  - fullname: Creative Commons Attribution Share Alike 4.0 International
+    identifier: CC-BY-SA-4.0
+    file: LICENSE
+supported_coq_versions:
+  - text: "8.20"
+    opam: '{ == "8.20~" }'
+supported_ocaml_versions:
+  - text: "4.13 or later"
+    opam: '{ >= "4.13~" }'

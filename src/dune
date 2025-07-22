@@ -1,0 +1,12 @@
+; This file was generated from `meta.yml`, please do not edit manually.
+; Follow the instructions on https://github.com/coq-community/templates to regenerate.
+
+(library
+ (name coq_EasyBakeRust)
+ (public_name coq-EasyBakeRust.plugin)
+ (synopsis "An extraction plugin for Rust")
+ (flags (:standard -w -9-27))
+ (libraries coq-core.vernac coq-core.lib coq-core.plugins.extraction)
+ (modules (:standard \ Cakeml))
+)
+(coq.pp (modules g_extraction))
